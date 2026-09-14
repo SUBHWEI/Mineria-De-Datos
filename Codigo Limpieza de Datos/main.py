@@ -1,22 +1,3 @@
-"""
-Punto de entrada unico de la limpieza del Healthcare Dataset.
-
-Fusion del antiguo pipeline.py + main.py en un solo modulo que orquesta
-los servicios por capas:
-- repositorios/cargador.py  -> acceso a datos (lectura del CSV crudo)
-- servicios/limpieza.py    -> transformaciones (duplicados, texto, imposibles)
-- servicios/calidad.py      -> analisis y validacion (diagnostico, outliers, validador)
-- utilidades/constantes.py  -> rutas y nombres de columnas
-
-Convencion de nombres:
-- Clases: UpperCamelCase.
-- Metodos y variables: lowerCamelCase.
-- Constantes: MAYUSCULAS.
-
-Ejecutar desde la raiz del proyecto (para que los CSV queden junto a esta):
-    python "Codigo Limpieza de Datos/main.py"
-"""
-
 from repositorios.cargador import CargadorDataset
 from servicios.calidad import Diagnosticador, AnalizadorOutliers, Validador
 from servicios.limpieza import NormalizadorTexto, TratadorDuplicados, TratadorValoresImposibles
