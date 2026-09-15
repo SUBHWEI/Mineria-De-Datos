@@ -21,28 +21,30 @@ valores nulos, la revision completa revela tres problemas de calidad:
 - **534 filas duplicadas exactas**, que inflan conteos y sesgan estadisticas.
 - **Nombres con mayusculas y minusculas mezcladas** (ej. "Bobby JacksOn"),
   que impiden busquedas y agrupaciones consistentes.
-- **106 facturas con monto negativo** (ej. -2008.49), un valor imposible para
-  el negocio que distorsiona cualquier calculo financiero.
+- **108 facturas con monto negativo en el crudo (106 tras quitar duplicados)**,
+  un valor imposible para el negocio que distorsiona cualquier calculo
+  financiero.
 
 ### 1.3 El objetivo
 Entregar una version limpia y confiable del dataset, lista para la siguiente
 etapa (modelado), conservando la mayor cantidad de informacion valida: solo
-se eliminan repeticiones exactas y se imputan los valores imposibles, sin
-borrar registros completos.
+se eliminan repeticiones exactas y los valores imposibles (facturas negativas)
+se marcan y se conservan sin modificar el monto, porque en datos sensibles
+como el dinero no se inventan valores.
 
 ### 1.4 La solucion implementada
 Se construyo un pipeline de limpieza por capas en Python (pandas), versionado
 en la carpeta `Codigo Limpieza de Datos` con una arquitectura multiservicio:
 
 - **Repositorios:** `cargador.py` — acceso a datos (lectura del CSV).
-- **Servicios:** `limpieza.py` (duplicados, texto, valores imposibles) y
-  `calidad.py` (diagnostico, outliers, validacion).
+- **Servicios:** `limpieza.py` (duplicados, texto, marcado de facturas
+  negativas) y `calidad.py` (diagnostico, outliers, validacion).
 - **Utilidades:** `constantes.py` — rutas y nombres de columnas.
 - **Orquestador:** `main.py` — define el orden del proceso.
 
-Entregables: `healthcare_dataset_limpio.csv` (54.966 filas), informe del
-proceso en Word y cuaderno de evidencia en Jupyter
-(`limpieza_datos_salud.ipynb`).
+Entregables: `healthcare_dataset_limpio.csv` (54.966 filas, con las facturas
+negativas marcadas en la columna `Factura_Negativa`), informe del proceso en
+Word y cuaderno de evidencia en Jupyter (`limpieza_datos_salud.ipynb`).
 
 ---
 
@@ -72,13 +74,14 @@ estadistico o modelado, conservando la mayor cantidad de informacion valida.
 **Criterios de exito (medibles):**
 - 0 filas duplicadas.
 - 0 valores nulos.
-- 0 facturas con monto negativo (valor imposible).
+- Todas las facturas negativas marcadas en `Factura_Negativa` y excluidas de
+  los calculos, sin modificar el monto.
 - Edades dentro de un rango humano (0-120 anos).
-- No perder informacion valida: solo se eliminan repeticiones exactas y se
-  imputan los valores imposibles, no se borran registros completos.
+- No perder informacion valida: solo se eliminan repeticiones exactas; los
+  montos imposibles se conservan marcados, no se borran registros completos.
 
 **Salida de esta fase:** el problema = el dataset crudo no es confiable para
-su uso. El exito se mide con los 4 criterios anteriores.
+su uso. El exito se mide con los criterios anteriores.
 
 ### Fase 2 — Data Understanding (Entendimiento de los datos)
 
@@ -94,6 +97,7 @@ su uso. El exito se mide con los 4 criterios anteriores.
 | Filas | 55.500 |
 | Duplicados exactos | 534 |
 | Nulos | 0 |
+| Facturas negativas | 108 en el crudo (106 tras quitar duplicados) |
 | Edad | min 13, max 89 (rango valido) |
 | Billing Amount | min -2008.49, max 52764.28 |
 
@@ -105,8 +109,9 @@ equivale a tener calidad.
 investigo si el error dependia de alguna variable (tipo de admision,
 aseguradora, condicion medica). Al comparar la distribucion de las facturas
 negativas contra el dataset completo, las proporciones son casi identicas:
-el error es aleatorio e independiente (MCAR). Esto define el tratamiento en
-la Fase 3.
+el error es aleatorio e independiente (MCAR). Esto confirma que no hay forma
+de derivar el valor correcto y define el manejo en la Fase 3: marcar y
+excluir, sin inventar montos.
 
 | Proporcion por tipo de admision | Negativas | Dataset completo |
 |---|---|---|
@@ -125,21 +130,25 @@ servicios y utilidades).
 | 1. Cargar | `repositorios/cargador.py` | Lectura del CSV crudo | 55.500 filas |
 | 2. Quitar duplicados | `servicios/limpieza.py` (TratadorDuplicados) | `drop_duplicates()` | -534 filas |
 | 3. Normalizar texto | `servicios/limpieza.py` (NormalizadorTexto) | `strip()` + `title()` sobre Name, Doctor, Hospital | Nombres unificados |
-| 4. Corregir facturas | `servicios/limpieza.py` (TratadorValoresImposibles) | Reemplazo de 106 negativos con la mediana de los validos (25.593,87) | 0 montos negativos |
-| 5. Revisar outliers | `servicios/calidad.py` (AnalizadorOutliers) | Regla IQR (Tukey) | 0 valores fuera de rango |
-| 6. Validar | `servicios/calidad.py` (Validador) | Checks de calidad | 0 duplicados, 0 nulos, 0 negativos, edades en rango |
+| 4. Marcar facturas | `servicios/limpieza.py` (MarcadorFacturasNegativas) | Nueva columna `Factura_Negativa = True` en las 106; el monto original se conserva | 106 marcadas, 0 imputadas |
+| 5. Revisar outliers | `servicios/calidad.py` (AnalizadorOutliers) | Regla IQR (Tukey) excluyendo las marcadas | 0 valores fuera de rango |
+| 6. Validar | `servicios/calidad.py` (Validador) | Checks: marcadas == negativas y montos intactos | 0 duplicados, 0 nulos, 106 marcadas, edades en rango |
 | 7. Exportar | main.py | `to_csv()` con 2 decimales | `healthcare_dataset_limpio.csv` |
 
 **Decisiones tecnicas justificadas:**
 - **Duplicados primero:** si no se eliminan antes, los calculos posteriores
   (medianas, proporciones) cuentan filas dobles y se sesgan.
-- **Mediana y no media:** la mediana es robusta a valores extremos; la media
-  se contamina con montos atipicos.
-- **Imputar y no borrar:** al ser el error MCAR, es seguro imputar con la
-  mediana de los valores validos; el registro del paciente se conserva.
-- **IQR solo informa:** el IQR no detecto los negativos porque el limite
-  inferior (-23414.78) quedo por debajo del minimo real. Son errores de
-  negocio, por eso se trataron con la regla `Billing Amount < 0`.
+- **No imputar dinero:** en datos financieros no se inventan valores;
+  reemplazar el monto con una mediana o media fabricaria un dato que la
+  empresa nunca registro y podria generar perdidas. Por eso el monto se
+  conserva intacto y solo se marca.
+- **Marcar y excluir:** las facturas negativas se marcan con
+  `Factura_Negativa = True` y se excluyen de `describe`, mediana e IQR,
+  quedando disponibles para auditoria pero fuera de los calculos.
+- **IQR solo informa:** la regla IQR no detecta las negativas porque no son
+  extremos de la distribucion (limite inferior de Billing Amount en
+  -23.521,2, sin valores fuera); son errores de negocio y por eso se tratan
+  aparte. La estadistica sola no basta.
 
 ---
 
@@ -148,12 +157,12 @@ servicios y utilidades).
 - El proyecto desarrolla las fases 1 a 3 de CRISP-DM: Business Understanding,
   Data Understanding y Data Preparation.
 - El proceso ES iterativo: el analisis de tipo de admision (Data Understanding)
-  definio el tratamiento de los negativos en la preparacion (Data Preparation).
+  definio el manejo de los negativos en la preparacion (Data Preparation).
 - La sistematizacion por capas (repositorios/servicios/utilidades) hace el
   proceso repetible y auditable: cada paso es un servicio comprobable.
 - El objetivo se expreso con criterios cuantitativos (0 duplicados, 0 nulos,
-  0 negativos, edades en rango) y la preparacion los cumple sin destruir datos
-  validos.
+  edades en rango y las 106 facturas negativas marcadas y excluidas) que se
+  cumplen sin destruir datos validos ni inventar valores.
 - La siguiente etapa seria Modelado (Fase 4), para la que el dataset limpio
   queda listo.
 

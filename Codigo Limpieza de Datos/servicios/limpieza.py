@@ -19,15 +19,13 @@ class NormalizadorTexto:
         return df
 
 
-class TratadorValoresImposibles:
-    def __init__(self):
-        pass
+class MarcadorFacturasNegativas:
+    def __init__(self, columnaFlag):
+        self.columnaFlag = columnaFlag
 
-    def corregirFacturacion(self, df):
+    def marcar(self, df):
         negativos = df["Billing Amount"] < 0
-        if negativos.sum() > 0:
-            mediana = df.loc[~negativos, "Billing Amount"].median()
-            df.loc[negativos, "Billing Amount"] = mediana
-            print("Facturas negativas corregidas:", int(negativos.sum()))
-            print("Valor de reemplazo (mediana):", round(mediana, 2))
+        df[self.columnaFlag] = negativos
+        print("Facturas negativas marcadas:", int(negativos.sum()))
+        print("El monto original se conserva, no se imputa ningún valor.")
         return df
