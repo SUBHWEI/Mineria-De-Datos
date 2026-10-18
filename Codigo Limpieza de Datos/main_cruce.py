@@ -39,6 +39,21 @@ class PipelineCruce:
         print("\nForma enriquecida:", dfEnriquecido.shape)
         print("Columnas nuevas:", [c for c in dfEnriquecido.columns if c not in dfHealthcare.columns])
 
+        print("\n=== Diagnostico del dataset cruzado ===")
+        print("Duplicados:", dfEnriquecido.duplicated().sum())
+        print("Nulos totales:", int(dfEnriquecido.isna().sum().sum()))
+        nulos = dfEnriquecido.isna().sum()
+        print("Columnas con nulos:\n", nulos[nulos > 0].to_string())
+        print("\nDescribe numericas:")
+        print(dfEnriquecido[["Age", "Billing Amount", "Num_Medicamentos"]].describe().round(2).to_string())
+
+        print("\nClasificacion de faltantes: los NaN en columnas enriquecidas son MNAR")
+        print("(informacion no disponible en el catalogo, no error de captura). No se imputan.")
+
+        print("\n=== Outliers (IQR) del cruzado ===")
+        from servicios.calidad import AnalizadorOutliers
+        AnalizadorOutliers(["Age", "Billing Amount"]).revisarIQR(dfEnriquecido)
+
         dfEnriquecido.to_csv(ARCHIVO_ENRIQUECIDO, index=False)
         print("Archivo guardado:", ARCHIVO_ENRIQUECIDO)
 
