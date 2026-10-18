@@ -19,13 +19,22 @@ class NormalizadorTexto:
         return df
 
 
-class MarcadorFacturasNegativas:
-    def __init__(self, columnaFlag):
-        self.columnaFlag = columnaFlag
+class NormalizadorDrugs:
+    """Normaliza columnas de texto del catálogo de fármacos para facilitar el mapeo."""
 
-    def marcar(self, df):
-        negativos = df["Billing Amount"] < 0
-        df[self.columnaFlag] = negativos
-        print("Facturas negativas marcadas:", int(negativos.sum()))
-        print("El monto original se conserva, no se imputa ningún valor.")
+    COLUMNAS_TEXTO = [
+        "PROPRIETARYNAME",
+        "NONPROPRIETARYNAME",
+        "SUBSTANCENAME",
+        "PHARM_CLASSES",
+        "DOSAGEFORMNAME",
+        "ROUTENAME",
+        "MARKETINGCATEGORYNAME",
+        "PRODUCTTYPENAME",
+    ]
+
+    def normalizar(self, df):
+        for columna in self.COLUMNAS_TEXTO:
+            if columna in df.columns:
+                df[columna] = df[columna].astype("string").str.strip()
         return df
