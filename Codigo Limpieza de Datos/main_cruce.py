@@ -27,6 +27,10 @@ class PipelineCruce:
         print("\n=== Cargando Drugs_product.csv ===")
         dfDrugs = self.cargadorDrugs.cargar()
         print("Filas:", len(dfDrugs), "Columnas:", len(dfDrugs.columns))
+        print("Duplicados:", dfDrugs.duplicated().sum())
+        print("Nulos totales:", int(dfDrugs.isna().sum().sum()))
+        print("Nulos por columna:")
+        print(dfDrugs.isna().sum().sort_values(ascending=False).head(6).to_string())
 
         print("\n=== Normalizando Drugs ===")
         dfDrugs = self.normalizadorDrugs.normalizar(dfDrugs)
