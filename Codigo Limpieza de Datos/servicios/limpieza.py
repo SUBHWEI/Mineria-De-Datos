@@ -38,3 +38,14 @@ class NormalizadorDrugs:
             if columna in df.columns:
                 df[columna] = df[columna].astype("string").str.strip()
         return df
+
+class MarcadorFacturasNegativas:
+    def __init__(self, columnaFlag):
+        self.columnaFlag = columnaFlag
+
+    def marcar(self, df):
+        negativos = df["Billing Amount"] < 0
+        df[self.columnaFlag] = negativos
+        print("Facturas negativas marcadas:", int(negativos.sum()))
+        print("El monto original se conserva, no se imputa ningun valor.")
+        return df
