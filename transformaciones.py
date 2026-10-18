@@ -12,8 +12,9 @@ import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer, RobustScaler
 
 CARPETA_PROYECTO = Path(__file__).resolve().parent
-ARCHIVO_LIMPIO = CARPETA_PROYECTO / "healthcare_dataset_limpio.csv"
-ARCHIVO_TRANSFORMADO = CARPETA_PROYECTO / "healthcare_dataset_transformado.csv"
+(CARPETA_PROYECTO / "data").mkdir(parents=True, exist_ok=True)
+ARCHIVO_LIMPIO = CARPETA_PROYECTO / "data" / "healthcare_dataset_limpio.csv"
+ARCHIVO_TRANSFORMADO = CARPETA_PROYECTO / "data" / "healthcare_dataset_transformado.csv"
 
 # Columnas nominales -> codificacion one-hot (binaria 0/1)
 CATEGORICAS_NOMINALES = [
