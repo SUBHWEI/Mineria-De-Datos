@@ -16,6 +16,8 @@ ARCHIVO_ANALISIS = CARPETA_DATA / "analisis_edad_medicamento.csv"
 ARCHIVO_DRUGS_PRODUCT = Path(
     r"C:\Users\major\OneDrive\Documentos\manuel\Universidad\octavo semestre\mineria de datos\Proyecto healtcare\proyecto\data\raw\Drugs_product.csv"
 )
+ARCHIVO_DRUGS_LIMPIO = CARPETA_DATA / "drugs_product_limpio.csv"
+ARCHIVO_DRUGS_TRANSFORMADO = CARPETA_DATA / "drugs_product_transformado.csv"
 
 COLUMNAS_NUMERICAS = ["Age", "Billing Amount"]
 COLUMNAS_TEXTO = ["Name", "Doctor", "Hospital"]
