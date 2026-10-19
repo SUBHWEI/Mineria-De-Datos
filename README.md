@@ -5,8 +5,7 @@ preparación de datos sobre el Healthcare Dataset de Kaggle: limpieza, transform
 un catálogo de medicamentos (Drugs_product) y análisis exploratorio (EDA). El código se organiza
 por capas (repositorios, servicios y utilidades) para dejarlo listo para la etapa de modelado.
 
-Equipo (MIMETIC): Manuel José Rivera Guzmán y Julián Andrés Correa Cuevas.
-Curso: Minería de Datos. Docente: Esteban Ernesto Morales Castro. Ibagué, 2026.
+Equipo: Manuel Rivera (Manuel1532PK) y Julián Correa (Subhwei).
 
 ## Datasets
 
