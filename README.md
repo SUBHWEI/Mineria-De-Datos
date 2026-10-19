@@ -40,14 +40,14 @@ Cada capa tiene una sola responsabilidad y las dependencias van en un solo senti
 ## Cómo ejecutar el pipeline
 
 ```powershell
-python "Codigo Limpieza de Datos/main.py"
+python src/main.py
 ```
 
 El script carga el archivo crudo, aplica la limpieza en orden, valida y guarda `healthcare_dataset_limpio.csv`.
 
 ### Cuaderno de evidencia
 
-Abrir `limpieza_datos_salud.ipynb` en Jupyter desde la raíz del proyecto (los imports ya agregan la carpeta `Codigo Limpieza de Datos` al `sys.path`).
+Abrir `docs/limpieza_datos_salud.ipynb` en Jupyter desde la raíz del proyecto (los imports agregan `src` al `sys.path`).
 
 ## Pipeline (orden y por qué)
 

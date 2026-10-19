@@ -6,10 +6,10 @@
 from pathlib import Path
 import sys
 
-CARPETA_PROYECTO = Path(__file__).resolve().parent
+CARPETA_PROYECTO = Path(__file__).resolve().parent.parent
 (CARPETA_PROYECTO / "data").mkdir(parents=True, exist_ok=True)
 
-sys.path.insert(0, str(CARPETA_PROYECTO / "Codigo Limpieza de Datos"))
+sys.path.insert(0, str(CARPETA_PROYECTO / "src"))
 from utilidades.constantes import ARCHIVO_DRUGS_PRODUCT
 
 ARCHIVO_DRUGS_CRUDO = ARCHIVO_DRUGS_PRODUCT
