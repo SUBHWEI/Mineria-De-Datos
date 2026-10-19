@@ -86,7 +86,8 @@ if __name__ == "__main__":
     base = Path(__file__).resolve().parent.parent
     df = pd.read_csv(base / "data" / "healthcare_dataset_enriquecido.csv")
     cols = [
-        "Age", "Billing Amount", "Num_Medicamentos", "Medical Condition Nivel",
+        "Age", "Billing Amount", "Medical Condition Nivel", "Admission Type Nivel",
+        "Factura_Negativa",
         "Medication_Aspirin", "Medication_Ibuprofen", "Medication_Lipitor",
         "Medication_Paracetamol", "Medication_Penicillin",
     ]
