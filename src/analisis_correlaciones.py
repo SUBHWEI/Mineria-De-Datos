@@ -78,3 +78,22 @@ def analizar_correlaciones(
         'top_pares': df_pares,
     }
 
+if __name__ == "__main__":
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import pandas as pd
+    base = Path(__file__).resolve().parent.parent
+    df = pd.read_csv(base / "data" / "healthcare_dataset_enriquecido.csv")
+    cols = [
+        "Age", "Billing Amount", "Num_Medicamentos", "Medical Condition Nivel",
+        "Medication_Aspirin", "Medication_Ibuprofen", "Medication_Lipitor",
+        "Medication_Paracetamol", "Medication_Penicillin",
+    ]
+    cols = [c for c in cols if c in df.columns]
+    res = analizar_correlaciones(
+        df, columnas=cols, top_n=15, annot=True, figsize=(9, 7),
+        triangulo=False, mostrar=False,
+        guardar_ruta=str(base / "docs" / "heatmap_correlaciones.png"),
+    )
+    print(res["top_pares"].to_string(index=False))
