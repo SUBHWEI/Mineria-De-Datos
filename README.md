@@ -39,37 +39,36 @@ Archivos generados en data/ (todos reproducibles con el código en src/):
 ## Estructura del proyecto
 
 ```
-mineria/
-├── README.md
-├── informe_laboratorio.docx
-├── data/
-│   ├── healthcare_dataset_original.csv
-│   ├── healthcare_dataset_limpio.csv
-│   ├── healthcare_dataset_transformado.csv
-│   ├── healthcare_dataset_enriquecido.csv
-│   ├── drugs_product_limpio.csv
-│   ├── drugs_product_transformado.csv
-│   └── analisis_edad_medicamento.csv
-├── docs/
-│   ├── Informe_Limpieza_Datos_Salud.docx
-│   ├── Informe_Transformacion_Datos_Salud.docx
-│   ├── documentacion_crisp-dm.docx
-│   ├── heatmap_correlaciones.png
-│   └── limpieza_datos_salud.ipynb
-└── src/
-    ├── main.py                    # orquestador de la limpieza
-    ├── main_cruce.py              # orquestador del cruce healthcare x Drugs
-    ├── transformaciones.py        # codificación y escalado del healthcare
-    ├── transformaciones_drugs.py  # codificación del catálogo Drugs
-    ├── analisis_correlaciones.py  # heatmap y ranking de correlaciones
-    ├── repositorios/
-    │   └── cargador.py            # acceso a datos (lectura de CSV)
-    ├── servicios/
-    │   ├── limpieza.py            # duplicados, normalización de texto, facturas negativas
-    │   ├── calidad.py             # diagnóstico, outliers IQR, validación
-    │   └── cruce.py               # enriquecimiento con el catálogo Drugs
-    └── utilidades/
-        └── constantes.py          # rutas y nombres de columnas
+Mineria-De-Datos/
+├── data/                             # datos crudos, limpios, transformados, enriquecidos y derivados
+├── docs/                             # documentación, tablas, figuras, árboles y reglas
+│   ├── tabla/
+│   ├── figuras/
+│   ├── arbol/
+│   └── reglas/
+├── models/                           # modelos serializados (.pkl)
+├── src/
+│   ├── main.py                       # orquestador de limpieza
+│   ├── main_cruce.py                 # orquestador de cruce healthcare + Drugs
+│   ├── main_arbol.py                 # orquestador de análisis y modelado de árboles
+│   ├── analisis/                     # análisis descriptivo y correlaciones
+│   ├── etiquetas/                    # derivación de etiquetas clínicas
+│   ├── modelado/                     # árboles de decisión (originales y derivados)
+│   ├── negocio/                      # interpretación de negocio y política de stock
+│   ├── visualizacion/                # generación de imágenes y texto de árboles
+│   ├── repositorios/                 # acceso a datos
+│   ├── servicios/                    # limpieza y calidad
+│   ├── transformaciones*.py          # codificación de variables
+│   └── utilidades/                  # constantes y rutas
+└── README.md
+```
+
+Cada capa tiene una sola responsabilidad y las dependencias van en un solo sentido: `main` → `servicios`/`modelado` → `repositorios`/`utilidades`.
+
+## Cómo ejecutar el pipeline
+
+```powershell
+python src/main.py
 ```
 
 Cada capa tiene una sola responsabilidad y las dependencias van en un solo sentido:
@@ -168,6 +167,80 @@ hardcodeada a una máquina específica
 src/main_cruce.py o src/transformaciones_drugs.py hay que ajustar esa ruta a la ubicación local
 del archivo Drugs_product.csv. Los scripts de limpieza y transformación del healthcare no la
 necesitan.
+
+## Modelado: árbol de decisión
+
+Se implementan dos experimentos con el mismo pipeline y las mismas features, cambiando la variable objetivo:
+
+| Experimento | Variable objetivo | Accuracy (test) | F1-macro (test) | Baseline |
+|---|---|---:|---:|---:|
+| 1 | `Medication` (original) | 0.204 | ~0.16 | 0.201 |
+| 2 | `Medicamento_Sugerido` (derivado por reglas clínicas) | 0.744 | 0.728 | 0.356 |
+
+- **Experimento 1:** demuestra que el dataset original es sintético y no contiene patrón predictivo real.
+- **Experimento 2:** usa una etiqueta derivada por reglas clínicas (documentada como escenario simulado) para mostrar que el árbol aprende patrones interpretables.
+
+### Cómo ejecutar el modelado
+
+Pipeline completo de árboles (Fases A, B, C y D):
+
+```powershell
+python src/main_arbol.py
+```
+
+Fase A (análisis descriptivo cruzado):
+
+```powershell
+python src/analisis/analisis_cruzado.py
+```
+
+Fase B (árboles predictivos originales):
+
+```powershell
+python src/modelado/modelo_enfermedad_por_edad.py
+python src/modelado/modelo_medicamento_por_enfermedad.py
+python src/modelado/modelo_cruzado.py
+```
+
+Modelo derivado (escenario simulado):
+
+```powershell
+python src/modelado/modelo_arbol_clinico.py
+```
+
+Fase C (etiquetas derivadas y árboles cruzados derivados):
+
+```powershell
+python src/etiquetas/derivar_etiquetas_clinicas.py
+python src/modelado/modelo_cruzado_derivado.py
+```
+
+Fase D (interpretación de negocio y política de stock):
+
+```powershell
+python src/negocio/interpretacion_negocio.py
+```
+
+Salidas generadas (organizadas en subcarpetas de `docs/`):
+
+- `data/healthcare_dataset_clinico.csv`
+- `data/healthcare_dataset_cruzado.csv`
+- `docs/tabla/` (CSV de tablas cruzadas y política de stock)
+- `docs/figuras/` (heatmaps, matrices de confusión, importancia de variables)
+- `docs/arbol/` (árboles en PNG y texto)
+- `docs/reglas/` (reglas de los árboles en TXT)
+- `docs/limitaciones.md`
+- `docs/Informe_Predicciones_Cruzadas.docx`
+- `docs/modelado_arbol_decision.ipynb`
+- `models/` (modelos serializados .pkl)
+
+### Entregables de modelado
+
+- Plan: `docs/plan_predicciones_cruzadas.md`
+- Orquestador: `src/main_arbol.py`
+- Notebook de evidencia: `docs/modelado_arbol_decision.ipynb`
+- Documentación Word: `docs/Informe_Predicciones_Cruzadas.docx`
+- Limitaciones: `docs/limitaciones.md`
 
 ## Referencias
 
